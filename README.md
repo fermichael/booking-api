@@ -4,7 +4,7 @@ Criei esta API para praticar desenvolvimento backend com TypeScript, Express e P
 
 Meu foco foi evitar que duas pessoas reservem o mesmo horário e garantir que cada conta só acesse suas próprias reservas. Para isso, implementei as verificações na API e as restrições de conflito no banco, incluindo proteção para requisições simultâneas.
 
-**Status: em desenvolvimento.** O fluxo de cadastro, login e reservas já está implementado. Ainda temos que implementar as funcionalidades necessárias para evoluir esta base para o SaaS de agendamento.
+**Status: em desenvolvimento.** O fluxo de cadastro, login e reservas já está implementado e pode ser executado localmente. Ainda temos que implementar as funcionalidades necessárias para evoluir esta base para o SaaS de agendamento. Atualmente existe uma agenda compartilhada e a criação de horários é pública.
 
 ## Navegação
 
@@ -25,7 +25,7 @@ Meu foco foi evitar que duas pessoas reservem o mesmo horário e garantir que ca
 - Criação e consulta de horários, com bloqueio de sobreposição.
 - Disponibilidade baseada em horários futuros sem reserva confirmada.
 - Reserva e cancelamento restritos ao dono, com histórico e possibilidade de nova reserva após cancelar.
-- Bloqueio de reserva e cancelamento de reservas confirmadas após o início da aula.
+- Bloqueio de novas reservas e de cancelamento de reservas confirmadas após o início da aula.
 - Proteções de concorrência no PostgreSQL e testes HTTP integrados.
 
 ## Tecnologias
@@ -35,7 +35,7 @@ Meu foco foi evitar que duas pessoas reservem o mesmo horário e garantir que ca
 | Linguagem e execução | TypeScript, Node.js 24 e tsx        |
 | HTTP e autenticação  | Express 5, express-session e Argon2 |
 | Banco e configuração | PostgreSQL 18, pg e dotenv          |
-| Qualidade            | node:test, assert, fetch e Prettier |
+| Testes               | node:test, assert e fetch |
 
 ## Executar localmente
 
@@ -51,7 +51,9 @@ Na raiz do projeto:
 
 ```powershell
 npm ci
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) {
+  Copy-Item .env.example .env
+}
 ```
 
 Se o `.env` já existir, edite-o em vez de sobrescrevê-lo. Ele deve conter:
@@ -73,7 +75,9 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
 
 Copie o resultado para `SESSION_SECRET`. O `.env` está no `.gitignore`; `.env.example` contém somente exemplos.
 
-### 2. Preparar um banco novo
+### 2. Preparar o banco
+
+Se o banco deste projeto já estiver configurado com as tabelas e restrições atuais, pule esta etapa. As instruções abaixo são para uma instalação nova.
 
 Conectado a outro banco, como `postgres`, execute:
 
@@ -147,7 +151,7 @@ npm run typecheck
 npm test
 ```
 
-A validação final registrou **18 testes de integração aprovados**, cobrindo autenticação, propriedade das reservas, disponibilidade, persistência e conflitos simultâneos. Veja [o relatório e o roteiro manual](docs/validacao-final.md).
+A última verificação registrada aprovou **18 testes de integração** dos fluxos já implementados, cobrindo autenticação, propriedade das reservas, disponibilidade, persistência e conflitos simultâneos. Veja [o relatório e o roteiro manual](docs/validacao-final.md). Esse resultado não indica que as funcionalidades pendentes estejam implementadas ou testadas.
 
 Os testes exigem PostgreSQL acessível pelo `.env` e permissão para criar schemas. Eles executam a aplicação em portas temporárias, criam somente um schema `booking_test_<processo>_<instante>` e o removem ao terminar. As tabelas de `public` não são alteradas. Não é necessário manter `npm run dev` em execução. Se houver encerramento forçado do processo, o schema temporário pode permanecer.
 
@@ -158,8 +162,10 @@ Os testes exigem PostgreSQL acessível pelo `.env` e permissão para criar schem
 | [Referência da API](docs/api.md)                     | Rotas, autenticação, parâmetros, respostas e erros     |
 | [Arquitetura e modelo de dados](docs/arquitetura.md) | Organização dos arquivos, responsabilidades e relações |
 | [Banco de dados](docs/banco.md)                      | Schema, migrations e garantias de integridade          |
-| [Validação final](docs/validacao-final.md)           | Cobertura automatizada e roteiro manual                |
+| [Validação dos fluxos implementados](docs/validacao-final.md) | Cobertura automatizada e roteiro manual |
 | [Problemas comuns](docs/problemas-comuns.md)         | Diagnóstico de configuração, cookies e conflitos       |
+
+As anotações e orientações de aprendizado ficam separadas em [estudos/](estudos/README.md). O código da aplicação fica em `src/`.
 
 ## Ainda temos que implementar
 
