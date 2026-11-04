@@ -1,10 +1,14 @@
 # Booking API
 
+## Sobre o projeto
+
 Criei esta API para praticar desenvolvimento backend com TypeScript, Express e PostgreSQL, usando uma agenda de aulas como problema real. Ela permite consultar disponibilidade, reservar horários e cancelar as próprias reservas, preservando o histórico.
 
 Meu foco foi evitar que duas pessoas reservem o mesmo horário e garantir que cada conta só acesse suas próprias reservas. Para isso, implementei as verificações na API e as restrições de conflito no banco, incluindo proteção para requisições simultâneas.
 
 **Status: em desenvolvimento.** O fluxo de cadastro, login e reservas já está implementado e pode ser executado localmente. Ainda temos que implementar as funcionalidades necessárias para evoluir esta base para o SaaS de agendamento. Atualmente existe uma agenda compartilhada e a criação de horários é pública.
+
+Autor: [Michael Guimarães](https://github.com/fermichael).
 
 ## Navegação
 
@@ -15,7 +19,6 @@ Meu foco foi evitar que duas pessoas reservem o mesmo horário e garantir que ca
 - [Testes](#testes)
 - [Documentação](#documentação)
 - [Ainda temos que implementar](#ainda-temos-que-implementar)
-- [Sobre o projeto](#sobre-o-projeto)
 - [Dúvidas e contribuições](#dúvidas-e-contribuições)
 
 ## Funcionalidades
@@ -178,12 +181,6 @@ Os testes exigem PostgreSQL acessível pelo `.env` e permissão para criar schem
 - **Configuração de produção e publicação:** preparar execução, segredos, HTTPS e operação do sistema online.
 
 Essas funcionalidades fazem parte da continuação do projeto. Os testes registrados cobrem o que já foi implementado; não significam que o SaaS completo está concluído.
-
-## Sobre o projeto
-
-Desenvolvi este projeto para aprofundar meus conhecimentos em HTTP, autenticação por sessão, autorização, consultas SQL e integridade dos dados. Comecei com arrays em memória e depois migrei as contas, os horários e as reservas para PostgreSQL.
-
-Autor: [Michael Guimarães](https://github.com/fermichael).
 
 ## Dúvidas e contribuições
 
