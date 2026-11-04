@@ -8,8 +8,6 @@ Meu foco foi evitar que duas pessoas reservem o mesmo horário e garantir que ca
 
 **Status: em desenvolvimento.** O fluxo de cadastro, login e reservas já está implementado e pode ser executado localmente. Ainda temos que implementar as funcionalidades necessárias para evoluir esta base para o SaaS de agendamento. Atualmente existe uma agenda compartilhada e a criação de horários é pública.
 
-Autor: [Michael Guimarães](https://github.com/fermichael).
-
 ## Navegação
 
 - [Funcionalidades](#funcionalidades)
