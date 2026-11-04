@@ -165,8 +165,6 @@ Os testes exigem PostgreSQL acessível pelo `.env` e permissão para criar schem
 | [Validação dos fluxos implementados](docs/validacao-final.md) | Cobertura automatizada e roteiro manual |
 | [Problemas comuns](docs/problemas-comuns.md)         | Diagnóstico de configuração, cookies e conflitos       |
 
-As anotações e orientações de aprendizado ficam separadas em [estudos/](estudos/README.md). O código da aplicação fica em `src/`.
-
 ## Ainda temos que implementar
 
 - **Permissões de professor:** usar o papel da conta para proteger a criação e a administração de horários. Hoje, `POST /time-slots` ainda é público.
