@@ -223,4 +223,4 @@ JSON malformado retorna `400`. Corpos acima do limite padrão do parser JSON do 
 | `timeSlotId` no corpo    | Número inteiro positivo de 32 bits; strings como `"2"` são recusadas                                  |
 | `status` no cancelamento | Exatamente `"cancelled"`                                                                              |
 
-Não há filtros por query string, paginação, edição de reserva ou alteração de horário nesta versão. A criação pública de horários e as sessões em memória são limitações; consulte o [escopo do projeto](../README.md#limitações).
+Filtros por query string, paginação e edição de reserva não fazem parte dos endpoints atuais. Ainda temos que implementar a administração de horários por professor e as sessões persistentes; consulte [as próximas funcionalidades](../README.md#ainda-temos-que-implementar).

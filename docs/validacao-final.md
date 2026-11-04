@@ -1,4 +1,6 @@
-# Relatório de validação final
+# Validação dos fluxos implementados
+
+O projeto continua em desenvolvimento. Este registro verifica a etapa já implementada, não a conclusão do SaaS.
 
 > Validação executada em **4 de novembro de 2026** com **Node.js 24.19.0** e **PostgreSQL local**.
 
@@ -65,6 +67,6 @@ A suíte não é uma auditoria de segurança nem um teste de carga. Os casos de 
 - Erros de JSON e rotas inexistentes retornam JSON consistente.
 - Foram adicionados schema reproduzível, exemplo de ambiente e script real de testes.
 
-## Limitações documentadas
+## Ainda temos que implementar
 
-MemoryStore, criação pública de horários, ausência de gestão de professores, ausência de recuperação de senha e proteção contra tentativas repetidas, sem frontend e sem configuração para produção. O README distingue esses itens das funcionalidades implementadas.
+Permissões e agendas por professor, sessões persistentes, validação e confirmação de email, recuperação de senha, limites de acesso, edição/exclusão de horários, frontend, pagamentos, notificações, integração externa e configuração de produção. A lista atual está no [README](../README.md#ainda-temos-que-implementar).

@@ -4,7 +4,7 @@ Criei esta API para praticar desenvolvimento backend com TypeScript, Express e P
 
 Meu foco foi evitar que duas pessoas reservem o mesmo horário e garantir que cada conta só acesse suas próprias reservas. Para isso, implementei as verificações na API e as restrições de conflito no banco, incluindo proteção para requisições simultâneas.
 
-**Status: versão 1.0.0 de estudo, para demonstração local.** A criação de horários é pública e as sessões ficam em memória. As permissões de professor e agendas independentes ainda não foram implementadas.
+**Status: em desenvolvimento.** O fluxo de cadastro, login e reservas já está implementado. Ainda temos que implementar as funcionalidades necessárias para evoluir esta base para o SaaS de agendamento.
 
 ## Navegação
 
@@ -14,7 +14,7 @@ Meu foco foi evitar que duas pessoas reservem o mesmo horário e garantir que ca
 - [Exemplo de uso](#exemplo-de-uso)
 - [Testes](#testes)
 - [Documentação](#documentação)
-- [Limitações](#limitações)
+- [Ainda temos que implementar](#ainda-temos-que-implementar)
 - [Sobre o projeto](#sobre-o-projeto)
 - [Dúvidas e contribuições](#dúvidas-e-contribuições)
 
@@ -161,16 +161,19 @@ Os testes exigem PostgreSQL acessível pelo `.env` e permissão para criar schem
 | [Validação final](docs/validacao-final.md)           | Cobertura automatizada e roteiro manual                |
 | [Problemas comuns](docs/problemas-comuns.md)         | Diagnóstico de configuração, cookies e conflitos       |
 
-## Limitações
+## Ainda temos que implementar
 
-- Uma única agenda compartilhada. **`POST /time-slots` é público**; não há autorização de professor nem vínculo `teacher_id`.
-- A coluna `users.role` aceita `student` e `teacher`, mas ainda não controla rotas. O cadastro público sempre usa o padrão `student`.
-- Sessões no MemoryStore: reiniciar a API encerra os logins. Contas, horários e reservas permanecem no PostgreSQL.
-- Emails têm espaços externos removidos, mas a unicidade é sensível a maiúsculas. Não há confirmação de email nem validação completa de seu formato.
-- Sem recuperação de senha, limitação de tentativas de login ou configuração de produção.
-- Sem frontend, edição/exclusão de horários, pagamentos, notificações ou integração externa.
+- **Permissões de professor:** usar o papel da conta para proteger a criação e a administração de horários. Hoje, `POST /time-slots` ainda é público.
+- **Agendas independentes:** vincular cada horário ao professor responsável e impedir acesso indevido entre professores.
+- **Sessões persistentes:** armazenar as sessões no banco para manter o login após reiniciar a aplicação. Atualmente elas ficam no MemoryStore.
+- **Tratamento de email:** validar o formato, confirmar o endereço e impedir duplicação por diferença entre maiúsculas e minúsculas.
+- **Recuperação de senha e proteção de acesso:** implementar redefinição segura e limites para tentativas de login.
+- **Edição e exclusão de horários:** permitir que o professor administre a própria agenda preservando reservas e histórico.
+- **Frontend:** criar as telas de conta, disponibilidade, reservas e administração da agenda.
+- **Pagamentos, notificações e integração externa:** definir as regras e implementar os serviços escolhidos.
+- **Configuração de produção e publicação:** preparar execução, segredos, HTTPS e operação do sistema online.
 
-Nesta versão, mantive o escopo em uma demonstração local de uma agenda compartilhada. A gestão de professores, as agendas independentes e a publicação ficam para uma próxima etapa.
+Essas funcionalidades fazem parte da continuação do projeto. Os testes registrados cobrem o que já foi implementado; não significam que o SaaS completo está concluído.
 
 ## Sobre o projeto
 
