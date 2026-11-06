@@ -6,7 +6,7 @@ Criei esta API para praticar desenvolvimento backend com TypeScript, Express e P
 
 Meu foco foi evitar que duas pessoas reservem o mesmo horário e garantir que cada conta só acesse suas próprias reservas. Para isso, implementei as verificações na API e as restrições de conflito no banco, incluindo proteção para requisições simultâneas.
 
-**Status: em desenvolvimento.** O fluxo de cadastro, login e reservas já está implementado e pode ser executado localmente. Ainda temos que implementar as funcionalidades necessárias para evoluir esta base para o SaaS de agendamento. Atualmente existe uma agenda compartilhada e a criação de horários é pública.
+**Status: em desenvolvimento.** O fluxo de cadastro, login, reservas e a separação de horários por professor já está implementado e pode ser executado localmente. Ainda temos que implementar as funcionalidades necessárias para evoluir esta base para o SaaS de agendamento. A criação e a consulta da agenda própria exigem uma conta autenticada com papel de professor; a disponibilidade continua compartilhada para os alunos.
 
 ## Navegação
 
@@ -23,7 +23,8 @@ Meu foco foi evitar que duas pessoas reservem o mesmo horário e garantir que ca
 
 - Cadastro com email único e hash de senha com Argon2.
 - Login, consulta da conta autenticada e logout por sessão.
-- Criação e consulta de horários, com bloqueio de sobreposição.
+- Criação e consulta dos próprios horários por professores, com bloqueio de sobreposição por professor.
+- Autorização por papel, com contas `student` e `teacher`.
 - Disponibilidade baseada em horários futuros sem reserva confirmada.
 - Reserva e cancelamento restritos ao dono, com histórico e possibilidade de nova reserva após cancelar.
 - Bloqueio de novas reservas e de cancelamento de reservas confirmadas após o início da aula.
@@ -86,7 +87,7 @@ Conectado a outro banco, como `postgres`, execute:
 CREATE DATABASE booking_api;
 ```
 
-Abra uma conexão para `booking_api` e execute **todo o arquivo** [database/schema.sql](database/schema.sql). Ele cria as três tabelas e as proteções de conflito, sem exigir extensões adicionais.
+Abra uma conexão para `booking_api` e execute **todo o arquivo** [database/schema.sql](database/schema.sql). Ele habilita a extensão `btree_gist`, cria as três tabelas e as proteções de conflito.
 
 Se você tiver `psql` no PATH, a alternativa é:
 
@@ -136,7 +137,7 @@ Com a API em execução, use o Postman nesta sequência:
 
 1. `POST /users`: cadastre uma conta com `name`, `email` e `password`.
 2. `POST /users/login`: envie `email` e `password` e mantenha o cookie recebido.
-3. `POST /time-slots`: crie um intervalo futuro com `start` e `end`, incluindo fuso horário.
+3. Com uma conta cujo papel seja `teacher`, `POST /time-slots`: crie um intervalo futuro com `start` e `end`, incluindo fuso horário.
 4. `GET /time-slots/available`: confira os horários livres.
 5. `POST /bookings`: envie `{ "timeSlotId": 1 }`, substituindo `1` pelo ID criado.
 6. `GET /bookings`: consulte suas reservas.
@@ -144,6 +145,14 @@ Com a API em execução, use o Postman nesta sequência:
 8. `POST /users/logout`: encerre a sessão.
 
 Os corpos completos, exemplos de respostas, regras de validação e erros estão na [referência da API](docs/api.md). O cliente é identificado pelo cookie; não há token Bearer.
+
+O cadastro público cria contas com papel `student`; o corpo de `POST /users` não pode promover uma conta. Para testar a criação de horários, atribua manualmente o papel de professor no banco a uma conta cadastrada e faça login novamente:
+
+```sql
+UPDATE users
+SET role = 'teacher'
+WHERE email = 'professor@example.com';
+```
 
 ## Testes
 
@@ -168,12 +177,10 @@ Os testes exigem PostgreSQL acessível pelo `.env` e permissão para criar schem
 
 ## Ainda temos que implementar
 
-- **Permissões de professor:** usar o papel da conta para proteger a criação e a administração de horários. Hoje, `POST /time-slots` ainda é público.
-- **Agendas independentes:** vincular cada horário ao professor responsável e impedir acesso indevido entre professores.
+- **Administração completa da agenda:** permitir edição e exclusão de horários pelo professor responsável, preservando reservas e histórico.
 - **Sessões persistentes:** armazenar as sessões no banco para manter o login após reiniciar a aplicação. Atualmente elas ficam no MemoryStore.
 - **Tratamento de email:** validar o formato, confirmar o endereço e impedir duplicação por diferença entre maiúsculas e minúsculas.
 - **Recuperação de senha e proteção de acesso:** implementar redefinição segura e limites para tentativas de login.
-- **Edição e exclusão de horários:** permitir que o professor administre a própria agenda preservando reservas e histórico.
 - **Frontend:** criar as telas de conta, disponibilidade, reservas e administração da agenda.
 - **Pagamentos, notificações e integração externa:** definir as regras e implementar os serviços escolhidos.
 - **Configuração de produção e publicação:** preparar execução, segredos, HTTPS e operação do sistema online.
