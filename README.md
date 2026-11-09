@@ -2,87 +2,74 @@
 
 ## Sobre o projeto
 
-A Booking API é o backend de uma plataforma de agendamento de aulas. O projeto começou como um estudo de TypeScript, Express e PostgreSQL e evoluiu para uma base funcional de SaaS.
+Esta é uma API de agendamento de aulas construída com TypeScript, Express e PostgreSQL. O projeto simula uma plataforma em que alunos consultam horários disponíveis e fazem reservas, enquanto professores gerenciam seus próprios horários e acompanham as reservas relacionadas a eles.
 
-A aplicação conecta professores, estudantes, horários e reservas, controlando autenticação, autorização, disponibilidade e conflitos de agenda.
+O foco principal é controlar autenticação, autorização, propriedade dos dados e conflitos de agenda. A API identifica o usuário pela sessão e usa o banco para preservar contas, horários, reservas e sessões mesmo depois que o servidor é reiniciado.
 
-O objetivo é construir gradualmente uma solução em que:
-
-- professores administrem suas próprias agendas;
-- estudantes encontrem horários disponíveis;
-- reservas não sejam duplicadas;
-- usuários só acessem recursos permitidos;
-- o banco também ajude a proteger as regras do sistema.
-
-## Status
-
-Em desenvolvimento.
-
-O fluxo principal já está implementado:
-
-- cadastro e login;
-- sessões autenticadas;
-- contas student e teacher;
-- criação de horários por professores;
-- agendas separadas por professor;
-- consulta de horários disponíveis;
-- criação e cancelamento de reservas;
-- edição de horários sem reserva confirmada;
-- bloqueio de conflitos no PostgreSQL.
-
-Ainda faltam funcionalidades como exclusão de horários, consulta de reservas pelos professores, frontend, notificações e publicação em produção.
-
-## Navegação
-
-- [Funcionalidades](#funcionalidades)
-- [Tecnologias](#tecnologias)
-- [Executar localmente](#executar-localmente)
-- [Exemplo de uso](#exemplo-de-uso)
-- [Testes](#testes)
-- [Documentação](#documentação)
-- [Ainda temos que implementar](#ainda-temos-que-implementar)
-- [Dúvidas e contribuições](#dúvidas-e-contribuições)
+**Status: em desenvolvimento.** O núcleo da API está implementado e pode ser executado localmente. Ainda faltam funcionalidades de produto, como frontend, recuperação de senha, notificações, pagamentos e preparação para produção.
 
 ## Funcionalidades
 
-- Cadastro com email único e hash de senha com Argon2.
-- Login, consulta da conta autenticada e logout por sessão.
-- Criação e consulta dos próprios horários por professores, com bloqueio de sobreposição por professor.
-- Autorização por papel, com contas `student` e `teacher`.
-- Disponibilidade baseada em horários futuros sem reserva confirmada.
-- Reserva e cancelamento restritos ao dono, com histórico e possibilidade de nova reserva após cancelar.
-- Bloqueio de novas reservas e de cancelamento de reservas confirmadas após o início da aula.
-- Proteções de concorrência no PostgreSQL e testes HTTP integrados.
+- Cadastro com email único e hash de senha usando Argon2.
+- Login, consulta da conta autenticada e logout.
+- Sessões persistidas no PostgreSQL através de `connect-pg-simple`.
+- Autorização por papel: `student` e `teacher`.
+- Professores criando, consultando, editando e excluindo os próprios horários.
+- Bloqueio de sobreposição de horários do mesmo professor no PostgreSQL.
+- Consulta de horários futuros disponíveis para alunos.
+- Criação e cancelamento de reservas pelo próprio aluno.
+- Histórico de reservas canceladas.
+- Consulta das reservas do aluno e das reservas relacionadas aos horários do professor.
+- Bloqueio de duas reservas confirmadas para o mesmo horário.
+- Bloqueio de reservas e cancelamentos depois do início da aula.
+- Validação de IDs, datas, intervalos e status.
+- Tratamento de erros de JSON inválido, corpo muito grande, rota inexistente e falhas inesperadas.
+
+## Aprendizados deste projeto
+
+Durante o desenvolvimento, pratiquei:
+
+- Organização de uma API Express em routers, controllers, services e middlewares.
+- Diferença entre autenticação e autorização.
+- Uso de sessões, cookies e armazenamento persistente de sessão.
+- Hash e verificação de senhas sem armazená-las em texto puro.
+- Modelagem relacional com usuários, papéis, horários e reservas.
+- Chaves estrangeiras e histórico de relacionamentos no PostgreSQL.
+- Consultas SQL parametrizadas com `pg`.
+- Uso de `JOIN`, `EXISTS`, índices parciais e constraints.
+- Controle de conflitos de horários com `timestamptz`, `tstzrange` e `btree_gist`.
+- Proteção contra reservas simultâneas no banco de dados.
+- Validação de dados recebidos por JSON, parâmetros de rota e sessão.
+- Uso de códigos HTTP como `400`, `401`, `403`, `404`, `409`, `500` e `204`.
+- Criação de migrations para evoluir um banco já existente.
+- Separação entre regras de negócio, acesso ao banco e transporte HTTP.
 
 ## Tecnologias
 
-| Finalidade           | Tecnologias                         |
-| -------------------- | ----------------------------------- |
-| Linguagem e execução | TypeScript, Node.js 24 e tsx        |
-| HTTP e autenticação  | Express 5, express-session e Argon2 |
-| Banco e configuração | PostgreSQL 18, pg e dotenv          |
-| Testes               | node:test, assert e fetch |
+| Finalidade | Tecnologias |
+| --- | --- |
+| Linguagem e execução | TypeScript, Node.js 24 e tsx |
+| HTTP | Express 5 |
+| Sessões e autenticação | express-session, connect-pg-simple e Argon2 |
+| Banco e acesso a dados | PostgreSQL 18 e pg |
+| Configuração | dotenv |
 
 ## Executar localmente
 
-### 1. Pré-requisitos
+### Pré-requisitos
 
-- Node.js 24, versão verificada neste projeto.
-- PostgreSQL 18, versão usada no desenvolvimento.
-- DBeaver, pgAdmin ou `psql` para executar os scripts SQL.
-
-Baixe ou clone este repositório e abra um terminal na pasta que contém `package.json`. Os comandos abaixo usam PowerShell no Windows.
+- Node.js 24.
+- PostgreSQL 18.
+- DBeaver, pgAdmin ou `psql`.
 
 Na raiz do projeto:
 
 ```powershell
 npm ci
-if (-not (Test-Path .env)) {
-  Copy-Item .env.example .env
-}
+Copy-Item .env.example .env
 ```
 
-Se o `.env` já existir, edite-o em vez de sobrescrevê-lo. Ele deve conter:
+Edite o `.env`:
 
 ```dotenv
 PGHOST=localhost
@@ -93,84 +80,66 @@ PGPASSWORD=sua_senha_local
 SESSION_SECRET=seu_segredo_longo_e_aleatorio
 ```
 
-Para gerar um segredo:
+Não publique o `.env` nem compartilhe a senha do banco ou o segredo da sessão.
 
-```powershell
-node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
-```
+### Preparar o banco
 
-Copie o resultado para `SESSION_SECRET`. O `.env` está no `.gitignore`; `.env.example` contém somente exemplos.
+Para uma instalação nova:
 
-### 2. Preparar o banco
+1. Crie o banco `booking_api`.
+2. Execute `database/schema.sql` na conexão desse banco.
+3. Execute `database/migrations/003-persistent-session.sql` para criar a tabela `sessions`.
 
-Se o banco deste projeto já estiver configurado com as tabelas e restrições atuais, pule esta etapa. As instruções abaixo são para uma instalação nova.
+As migrations `001` e `002` existem para atualizar bancos antigos. Não execute novamente uma migration que já foi aplicada.
 
-Conectado a outro banco, como `postgres`, execute:
+O schema cria `users`, `time_slots` e `bookings`. A migration `003` cria `sessions`, usada pelo armazenamento persistente de login.
 
-```sql
-CREATE DATABASE booking_api;
-```
-
-Abra uma conexão para `booking_api` e execute **todo o arquivo** [database/schema.sql](database/schema.sql). Ele habilita a extensão `btree_gist`, cria as três tabelas e as proteções de conflito.
-
-Se você tiver `psql` no PATH, a alternativa é:
-
-```powershell
-psql -h localhost -p 5432 -U postgres -d booking_api -f database/schema.sql
-```
-
-O script é para **banco vazio**: não o execute novamente sobre tabelas existentes. Ele não apaga nem recria dados automaticamente.
-
-Para atualizar um banco antigo, consulte [a documentação do banco](docs/banco.md).
-
-### 3. Iniciar
+### Iniciar
 
 ```powershell
 npm run dev
 ```
 
-A API responde em `http://localhost:3001`. Para executar sem observar alterações:
+A API estará disponível em `http://localhost:3001`.
+
+Para iniciar sem o modo de observação:
 
 ```powershell
 npm start
 ```
 
-O código TypeScript é executado pelo tsx; não há etapa de build nesta versão local.
+Para verificar os tipos TypeScript:
 
-### 4. Confirmar a execução
-
-No navegador ou Postman, consulte:
-
-```http
-GET http://localhost:3001/health
+```powershell
+npm run typecheck
 ```
 
-Resposta esperada: `200 OK`.
+## Rotas principais
 
-```json
-{
-  "message": "Running"
-}
-```
+| Método | Rota | Acesso | Finalidade |
+| --- | --- | --- | --- |
+| GET | `/health` | Público | Verifica se a API está funcionando |
+| POST | `/users` | Público | Cadastra uma conta `student` |
+| POST | `/users/login` | Público | Cria uma sessão |
+| GET | `/users/me` | Usuário autenticado | Consulta a conta da sessão |
+| POST | `/users/logout` | Público | Encerra a sessão |
+| GET | `/time-slots` | Professor | Lista os próprios horários |
+| GET | `/time-slots/available` | Público | Lista horários futuros livres |
+| GET | `/time-slots/:id` | Público | Consulta um horário |
+| GET | `/time-slots/teacher/:id` | Professor | Consulta um horário da própria agenda |
+| POST | `/time-slots` | Professor | Cria um horário |
+| PATCH | `/time-slots/:id` | Professor | Edita um horário próprio sem reservas confirmadas |
+| DELETE | `/time-slots/:id` | Professor | Exclui um horário sem histórico de reservas |
+| GET | `/bookings` | Aluno autenticado | Lista as próprias reservas |
+| GET | `/teacher/bookings` | Professor autenticado | Lista reservas dos próprios horários |
+| POST | `/bookings` | Aluno autenticado | Cria uma reserva |
+| PATCH | `/bookings/:bookingId` | Aluno autenticado | Cancela uma própria reserva |
 
-Esse endpoint verifica o processo HTTP; não consulta o banco. Para exercitar persistência e autenticação, siga o fluxo abaixo.
+## Exemplo de fluxo
 
-## Exemplo de uso
-
-Com a API em execução, use o Postman nesta sequência:
-
-1. `POST /users`: cadastre uma conta com `name`, `email` e `password`.
-2. `POST /users/login`: envie `email` e `password` e mantenha o cookie recebido.
-3. Com uma conta cujo papel seja `teacher`, `POST /time-slots`: crie um intervalo futuro com `start` e `end`, incluindo fuso horário.
-4. `GET /time-slots/available`: confira os horários livres.
-5. `POST /bookings`: envie `{ "timeSlotId": 1 }`, substituindo `1` pelo ID criado.
-6. `GET /bookings`: consulte suas reservas.
-7. `PATCH /bookings/:bookingId`: envie `{ "status": "cancelled" }` para cancelar a reserva criada.
-8. `POST /users/logout`: encerre a sessão.
-
-Os corpos completos, exemplos de respostas, regras de validação e erros estão na [referência da API](docs/api.md). O cliente é identificado pelo cookie; não há token Bearer.
-
-O cadastro público cria contas com papel `student`; o corpo de `POST /users` não pode promover uma conta. Para testar a criação de horários, atribua manualmente o papel de professor no banco a uma conta cadastrada e faça login novamente:
+1. Cadastre uma conta com `POST /users`.
+2. Faça login em `POST /users/login` e mantenha o cookie `bookingapi`.
+3. Para testar funções de professor, atribua o papel no banco:
 
 ```sql
 UPDATE users
@@ -178,41 +147,58 @@ SET role = 'teacher'
 WHERE email = 'professor@example.com';
 ```
 
-## Testes
+4. Faça login novamente com essa conta.
+5. Crie um horário futuro em `POST /time-slots`:
 
-```powershell
-npm run typecheck
-npm test
+```json
+{
+  "start": "2030-12-10T14:00:00-03:00",
+  "end": "2030-12-10T15:00:00-03:00"
+}
 ```
 
-A última verificação registrada aprovou **18 testes de integração** dos fluxos já implementados, cobrindo autenticação, propriedade das reservas, disponibilidade, persistência e conflitos simultâneos. Veja [o relatório e o roteiro manual](docs/validacao-final.md). Esse resultado não indica que as funcionalidades pendentes estejam implementadas ou testadas.
+6. Faça login com uma conta `student`.
+7. Consulte `GET /time-slots/available`.
+8. Reserve com `POST /bookings`:
 
-Os testes exigem PostgreSQL acessível pelo `.env` e permissão para criar schemas. Eles executam a aplicação em portas temporárias, criam somente um schema `booking_test_<processo>_<instante>` e o removem ao terminar. As tabelas de `public` não são alteradas. Não é necessário manter `npm run dev` em execução. Se houver encerramento forçado do processo, o schema temporário pode permanecer.
+```json
+{
+  "timeSlotId": 1
+}
+```
 
-## Documentação
+9. Consulte suas reservas com `GET /bookings`.
+10. Cancele uma reserva com `PATCH /bookings/:bookingId`:
 
-| Documento                                            | Conteúdo                                               |
-| ---------------------------------------------------- | ------------------------------------------------------ |
-| [Referência da API](docs/api.md)                     | Rotas, autenticação, parâmetros, respostas e erros     |
-| [Arquitetura e modelo de dados](docs/arquitetura.md) | Organização dos arquivos, responsabilidades e relações |
-| [Banco de dados](docs/banco.md)                      | Schema, migrations e garantias de integridade          |
-| [Validação dos fluxos implementados](docs/validacao-final.md) | Cobertura automatizada e roteiro manual |
-| [Problemas comuns](docs/problemas-comuns.md)         | Diagnóstico de configuração, cookies e conflitos       |
+```json
+{
+  "status": "cancelled"
+}
+```
+
+O usuário é identificado pelo cookie da sessão. Não existe autenticação por token Bearer nesta versão.
 
 ## Ainda temos que implementar
 
-- **Administração completa da agenda:** permitir edição e exclusão de horários pelo professor responsável, preservando reservas e histórico.
-- **Sessões persistentes:** armazenar as sessões no banco para manter o login após reiniciar a aplicação. Atualmente elas ficam no MemoryStore.
-- **Tratamento de email:** validar o formato, confirmar o endereço e impedir duplicação por diferença entre maiúsculas e minúsculas.
-- **Recuperação de senha e proteção de acesso:** implementar redefinição segura e limites para tentativas de login.
-- **Frontend:** criar as telas de conta, disponibilidade, reservas e administração da agenda.
-- **Pagamentos, notificações e integração externa:** definir as regras e implementar os serviços escolhidos.
-- **Configuração de produção e publicação:** preparar execução, segredos, HTTPS e operação do sistema online.
+- Fluxo seguro de convite ou administração de professores.
+- Validação completa e confirmação de email.
+- Normalização de emails para evitar duplicação por diferença entre maiúsculas e minúsculas.
+- Recuperação de senha e limitação de tentativas de login.
+- Frontend para contas, horários e reservas.
+- Notificações e lembretes.
+- Pagamentos e integrações externas.
+- Configuração de produção, HTTPS, observabilidade e publicação online.
 
-Essas funcionalidades fazem parte da continuação do projeto. Os testes registrados cobrem o que já foi implementado; não significam que o SaaS completo está concluído.
+## Limitações atuais
+
+- O cadastro público sempre cria contas com papel `student`.
+- A sessão usa cookies e possui expiração configurada pelo armazenamento persistente.
+- O projeto ainda não possui frontend.
+- Não há suíte automatizada de testes nesta versão.
+- O banco e a API ainda são executados localmente.
 
 ## Dúvidas e contribuições
 
-Ao abrir uma issue neste repositório, descreva os passos para reproduzir, o resultado esperado, o resultado recebido e as versões de Node.js e PostgreSQL. Não inclua `.env`, senhas, cookies ou hashes de senha.
+Ao abrir uma issue, informe o endpoint, o corpo enviado sem credenciais reais, o status recebido, a mensagem do terminal e as versões de Node.js e PostgreSQL.
 
-Para propor uma mudança, explique o problema e como verificou a solução. Antes de enviar, execute os comandos de verificação acima.
+Nunca publique `.env`, senhas, cookies de sessão ou hashes de senha.
