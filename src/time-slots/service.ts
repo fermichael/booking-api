@@ -99,3 +99,54 @@ export async function changeTimeSlot (start: string, end: string, id: number, te
     throw error;
   }
 }
+
+export async function deleteTimeSlot(id: number, teacherId: number) {
+  const teacherOwner = await pool.query(
+    `SELECT 1
+     FROM time_slots
+     WHERE id = $1 AND teacher_id = $2`,
+    [id, teacherId],
+  );
+
+  if (teacherOwner.rows.length === 0) {
+    return undefined;
+  }
+
+  const bookings = await pool.query(
+    `SELECT 1
+     FROM bookings
+     WHERE time_slot_id = $1`,
+    [id],
+  );
+
+  if (bookings.rows.length > 0) {
+    return 'has-bookings';
+  }
+
+  try {
+    const deletedTimeSlot = await pool.query(
+      `DELETE FROM time_slots
+       WHERE id = $1 AND teacher_id = $2
+       RETURNING id`,
+      [id, teacherId],
+    );
+
+    return deletedTimeSlot.rows[0];
+  } catch (error) {
+    console.error(error);
+
+    const code =
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      typeof error.code === "string"
+        ? error.code
+        : undefined;
+
+    if (code === "23503") {
+      return 'has-bookings';
+    }
+
+    throw error;
+  }
+}

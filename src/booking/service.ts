@@ -8,6 +8,11 @@ type Booking = {
   status: "confirmed" | "cancelled";
 };
 
+type TeacherBooking = Booking & {
+  start: Date;
+  end: Date;
+};
+
 export async function addBooking(userId: number, timeSlotId: number) {
   const foundTimeSlot = await findTimeSlot(timeSlotId);
   if (foundTimeSlot === undefined) {
@@ -44,6 +49,26 @@ export async function findBookings(userId: number) {
     `SELECT id AS "bookingId", student_id AS "studentId", time_slot_id AS "timeSlotId", status FROM bookings WHERE student_id = $1 ORDER BY id`,
     [userId],
   );
+  return foundBookings.rows;
+}
+
+export async function findTeacherBookings(teacherId: number) {
+  const foundBookings = await pool.query<TeacherBooking>(
+    `SELECT
+       bookings.id AS "bookingId",
+       bookings.student_id AS "studentId",
+       bookings.time_slot_id AS "timeSlotId",
+       bookings.status,
+       time_slots.starts_at AS "start",
+       time_slots.ends_at AS "end"
+     FROM bookings
+     JOIN time_slots
+       ON time_slots.id = bookings.time_slot_id
+     WHERE time_slots.teacher_id = $1
+     ORDER BY time_slots.starts_at`,
+    [teacherId],
+  );
+
   return foundBookings.rows;
 }
 

@@ -1,5 +1,13 @@
 import type { Request, Response } from "express";
-import { getTimeSlots, findTimeSlot, addTimeSlot, getAvailableTimeSlots, findTeacherTimeSlot, changeTimeSlot } from "./service";
+import {
+  getTimeSlots,
+  findTimeSlot,
+  addTimeSlot,
+  getAvailableTimeSlots,
+  findTeacherTimeSlot,
+  changeTimeSlot,
+  deleteTimeSlot,
+} from "./service";
 import { isValidDateTime } from "./validation";
 
 export const listTimeSlots = async (req: Request, res: Response) => {
@@ -192,4 +200,42 @@ export const alterTimeSlots = async (req: Request, res: Response) => {
     });
   }
 
+};
+
+export const removeTimeSlot = async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  const teacherId = res.locals.userId;
+
+  if (!Number.isInteger(id) || id <= 0 || id > 2147483647) {
+    res.status(400).json({
+      message: 'The ID must be a positive integer',
+    });
+    return;
+  }
+
+  try {
+    const deletedTimeSlot = await deleteTimeSlot(id, teacherId);
+
+    if (deletedTimeSlot === 'has-bookings') {
+      res.status(409).json({
+        message: 'Cannot delete a time slot with bookings',
+      });
+      return;
+    }
+
+    if (deletedTimeSlot === undefined) {
+      res.status(404).json({
+        message: 'Time slot not found',
+      });
+      return;
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: 'Could not delete time slot',
+    });
+  }
 };

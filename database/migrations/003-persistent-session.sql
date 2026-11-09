@@ -1,0 +1,5 @@
+CREATE TABLE sessions( 
+    sid TEXT NOT NULL PRIMARY KEY,
+    sess JSON NOT NULL,
+    expire TIMESTAMP(6) NOT NULL
+)

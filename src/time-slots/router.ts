@@ -2,7 +2,15 @@ import { Router } from "express";
 
 import { requireTeacher } from "../middleware/require-teacher";
 import { requireUser } from "../middleware/require-user";
-import { alterTimeSlots, createTimeSlot, getTeacherTimeSlot, getTimeSlot, listTimeSlots, showAvailableTimeSlots } from "./controller";
+import {
+  alterTimeSlots,
+  createTimeSlot,
+  getTeacherTimeSlot,
+  getTimeSlot,
+  listTimeSlots,
+  removeTimeSlot,
+  showAvailableTimeSlots,
+} from "./controller";
 
 export const timeSlotsRouter = Router();
 
@@ -17,3 +25,5 @@ timeSlotsRouter.get("/time-slots/:id", getTimeSlot);
 timeSlotsRouter.post("/time-slots", requireUser, requireTeacher, createTimeSlot);
 
 timeSlotsRouter.patch("/time-slots/:id",requireUser, requireTeacher, alterTimeSlots)
+
+timeSlotsRouter.delete("/time-slots/:id", requireUser, requireTeacher, removeTimeSlot);

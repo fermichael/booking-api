@@ -1,7 +1,10 @@
 import express from "express";
+
 import type { ErrorRequestHandler } from "express";
 import session from "express-session";
 import "dotenv/config";
+import { pool } from "./database";
+import connectPgSimple from "connect-pg-simple";
 
 import { bookingRouter } from "./booking/router";
 import { timeSlotsRouter } from "./time-slots/router";
@@ -13,10 +16,16 @@ if (!sessionSecret) {
 }
 
 export const app = express();
+const pgSession = connectPgSimple(session)
 
 app.use(express.json());
+
 app.use(
   session({
+    store: new pgSession({
+      pool,
+      tableName: 'sessions'
+    }),
     name: "bookingapi",
     secret: sessionSecret,
     resave: false,

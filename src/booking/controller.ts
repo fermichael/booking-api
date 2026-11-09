@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import type { UserLocals } from "../middleware/require-user";
-import { addBooking, findBookings, cancelUserBooking } from "./service";
+import { addBooking, findBookings, findTeacherBookings, cancelUserBooking } from "./service";
 
 export const createBooking = async (req: Request, res: Response<unknown, UserLocals>) => {
   const userId = res.locals.userId;
@@ -56,6 +56,20 @@ export const listBookings = async (req: Request, res: Response<unknown, UserLoca
     console.error(error);
     res.status(500).json({
       message: 'Could not list bookings',
+    });
+  }
+};
+
+export const listTeacherBookings = async (req: Request, res: Response<unknown, UserLocals>) => {
+  try {
+    const teacherId = res.locals.userId;
+    const result = await findTeacherBookings(teacherId);
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: 'Could not list teacher bookings',
     });
   }
 };

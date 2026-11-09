@@ -14,8 +14,6 @@ Meu foco foi evitar que duas pessoas reservem o mesmo horário e garantir que ca
 - [Tecnologias](#tecnologias)
 - [Executar localmente](#executar-localmente)
 - [Exemplo de uso](#exemplo-de-uso)
-- [Testes](#testes)
-- [Documentação](#documentação)
 - [Ainda temos que implementar](#ainda-temos-que-implementar)
 - [Dúvidas e contribuições](#dúvidas-e-contribuições)
 
@@ -23,21 +21,41 @@ Meu foco foi evitar que duas pessoas reservem o mesmo horário e garantir que ca
 
 - Cadastro com email único e hash de senha com Argon2.
 - Login, consulta da conta autenticada e logout por sessão.
+- Sessões armazenadas no PostgreSQL, permitindo manter o login após reiniciar a API.
 - Criação e consulta dos próprios horários por professores, com bloqueio de sobreposição por professor.
+- Edição e exclusão de horários pelo professor responsável, preservando horários que já possuem reservas.
 - Autorização por papel, com contas `student` e `teacher`.
 - Disponibilidade baseada em horários futuros sem reserva confirmada.
 - Reserva e cancelamento restritos ao dono, com histórico e possibilidade de nova reserva após cancelar.
+- Consulta das reservas próprias pelo aluno e das reservas relacionadas aos horários pelo professor.
 - Bloqueio de novas reservas e de cancelamento de reservas confirmadas após o início da aula.
-- Proteções de concorrência no PostgreSQL e testes HTTP integrados.
+- Proteções de concorrência no PostgreSQL.
+
+## Aprendizados deste projeto
+
+Este projeto consolidou conhecimentos práticos de desenvolvimento backend, desde o recebimento de uma requisição até a persistência dos dados:
+
+- Organização de uma API Express em routers, controllers, services e middlewares.
+- Separação entre autenticação, autorização e regras de negócio.
+- Uso de sessões e cookies para manter o usuário identificado entre requisições.
+- Hash e verificação de senhas com Argon2, sem armazenar senhas em texto puro.
+- Modelagem relacional com chaves estrangeiras, papéis de usuário e histórico de reservas.
+- Consultas SQL parametrizadas com `pg`, evitando interpolação direta de valores.
+- Uso de transações conceituais entre validações da API e garantias do PostgreSQL.
+- Controle de conflitos de horários com `timestamptz`, `tstzrange` e restrições de exclusão.
+- Controle de concorrência para impedir duas reservas confirmadas no mesmo horário.
+- Validação de IDs, datas, intervalos, status e dados recebidos em JSON.
+- Uso consciente de códigos HTTP, como `400`, `401`, `403`, `404`, `409`, `500` e `204`.
+- Evolução de um schema por migrations e distinção entre instalação nova e banco já existente.
+- Tratamento centralizado de JSON inválido, rotas inexistentes e erros inesperados.
 
 ## Tecnologias
 
 | Finalidade           | Tecnologias                         |
 | -------------------- | ----------------------------------- |
 | Linguagem e execução | TypeScript, Node.js 24 e tsx        |
-| HTTP e autenticação  | Express 5, express-session e Argon2 |
-| Banco e configuração | PostgreSQL 18, pg e dotenv          |
-| Testes               | node:test, assert e fetch |
+| HTTP e autenticação  | Express 5, express-session, connect-pg-simple e Argon2 |
+| Banco e configuração | PostgreSQL 18, pg e dotenv                            |
 
 ## Executar localmente
 
@@ -87,7 +105,7 @@ Conectado a outro banco, como `postgres`, execute:
 CREATE DATABASE booking_api;
 ```
 
-Abra uma conexão para `booking_api` e execute **todo o arquivo** [database/schema.sql](database/schema.sql). Ele habilita a extensão `btree_gist`, cria as três tabelas e as proteções de conflito.
+Abra uma conexão para `booking_api` e execute **todo o arquivo** [database/schema.sql](database/schema.sql). Ele habilita a extensão `btree_gist`, cria as três tabelas principais e as proteções de conflito.
 
 Se você tiver `psql` no PATH, a alternativa é:
 
@@ -97,7 +115,7 @@ psql -h localhost -p 5432 -U postgres -d booking_api -f database/schema.sql
 
 O script é para **banco vazio**: não o execute novamente sobre tabelas existentes. Ele não apaga nem recria dados automaticamente.
 
-Para atualizar um banco antigo, consulte [a documentação do banco](docs/banco.md).
+Depois do schema, execute também `database/migrations/003-persistent-session.sql` para criar a tabela `sessions`, usada pelo armazenamento persistente de login. Em um banco antigo, aplique somente as migrations necessárias, respeitando a ordem indicada pelos nomes dos arquivos. Não reaplique migrations que já foram executadas.
 
 ### 3. Iniciar
 
@@ -136,7 +154,7 @@ Esse endpoint verifica o processo HTTP; não consulta o banco. Para exercitar pe
 Com a API em execução, use o Postman nesta sequência:
 
 1. `POST /users`: cadastre uma conta com `name`, `email` e `password`.
-2. `POST /users/login`: envie `email` e `password` e mantenha o cookie recebido.
+2. `POST /users/login`: envie `email` e `password` e mantenha o cookie recebido. A sessão é registrada na tabela `sessions`.
 3. Com uma conta cujo papel seja `teacher`, `POST /time-slots`: crie um intervalo futuro com `start` e `end`, incluindo fuso horário.
 4. `GET /time-slots/available`: confira os horários livres.
 5. `POST /bookings`: envie `{ "timeSlotId": 1 }`, substituindo `1` pelo ID criado.
@@ -144,7 +162,7 @@ Com a API em execução, use o Postman nesta sequência:
 7. `PATCH /bookings/:bookingId`: envie `{ "status": "cancelled" }` para cancelar a reserva criada.
 8. `POST /users/logout`: encerre a sessão.
 
-Os corpos completos, exemplos de respostas, regras de validação e erros estão na [referência da API](docs/api.md). O cliente é identificado pelo cookie; não há token Bearer.
+O cliente é identificado pelo cookie; não há token Bearer. As sessões são armazenadas no PostgreSQL e possuem expiração. As principais regras de validação e respostas estão descritas neste README.
 
 O cadastro público cria contas com papel `student`; o corpo de `POST /users` não pode promover uma conta. Para testar a criação de horários, atribua manualmente o papel de professor no banco a uma conta cadastrada e faça login novamente:
 
@@ -154,41 +172,19 @@ SET role = 'teacher'
 WHERE email = 'professor@example.com';
 ```
 
-## Testes
-
-```powershell
-npm run typecheck
-npm test
-```
-
-A última verificação registrada aprovou **18 testes de integração** dos fluxos já implementados, cobrindo autenticação, propriedade das reservas, disponibilidade, persistência e conflitos simultâneos. Veja [o relatório e o roteiro manual](docs/validacao-final.md). Esse resultado não indica que as funcionalidades pendentes estejam implementadas ou testadas.
-
-Os testes exigem PostgreSQL acessível pelo `.env` e permissão para criar schemas. Eles executam a aplicação em portas temporárias, criam somente um schema `booking_test_<processo>_<instante>` e o removem ao terminar. As tabelas de `public` não são alteradas. Não é necessário manter `npm run dev` em execução. Se houver encerramento forçado do processo, o schema temporário pode permanecer.
-
-## Documentação
-
-| Documento                                            | Conteúdo                                               |
-| ---------------------------------------------------- | ------------------------------------------------------ |
-| [Referência da API](docs/api.md)                     | Rotas, autenticação, parâmetros, respostas e erros     |
-| [Arquitetura e modelo de dados](docs/arquitetura.md) | Organização dos arquivos, responsabilidades e relações |
-| [Banco de dados](docs/banco.md)                      | Schema, migrations e garantias de integridade          |
-| [Validação dos fluxos implementados](docs/validacao-final.md) | Cobertura automatizada e roteiro manual |
-| [Problemas comuns](docs/problemas-comuns.md)         | Diagnóstico de configuração, cookies e conflitos       |
-
 ## Ainda temos que implementar
 
-- **Administração completa da agenda:** permitir edição e exclusão de horários pelo professor responsável, preservando reservas e histórico.
-- **Sessões persistentes:** armazenar as sessões no banco para manter o login após reiniciar a aplicação. Atualmente elas ficam no MemoryStore.
 - **Tratamento de email:** validar o formato, confirmar o endereço e impedir duplicação por diferença entre maiúsculas e minúsculas.
 - **Recuperação de senha e proteção de acesso:** implementar redefinição segura e limites para tentativas de login.
+- **Gestão de professores:** criar um fluxo seguro de convite ou administração para conceder o papel `teacher`, em vez da alteração manual no banco.
 - **Frontend:** criar as telas de conta, disponibilidade, reservas e administração da agenda.
 - **Pagamentos, notificações e integração externa:** definir as regras e implementar os serviços escolhidos.
 - **Configuração de produção e publicação:** preparar execução, segredos, HTTPS e operação do sistema online.
 
-Essas funcionalidades fazem parte da continuação do projeto. Os testes registrados cobrem o que já foi implementado; não significam que o SaaS completo está concluído.
+Essas funcionalidades fazem parte da continuação do projeto. O núcleo da API está implementado, mas o SaaS ainda precisa de interface e operação de produção.
 
 ## Dúvidas e contribuições
 
 Ao abrir uma issue neste repositório, descreva os passos para reproduzir, o resultado esperado, o resultado recebido e as versões de Node.js e PostgreSQL. Não inclua `.env`, senhas, cookies ou hashes de senha.
 
-Para propor uma mudança, explique o problema e como verificou a solução. Antes de enviar, execute os comandos de verificação acima.
+Para propor uma mudança, explique o problema e como verificou a solução. Antes de enviar, execute `npm run typecheck`.
