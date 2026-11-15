@@ -11,7 +11,7 @@ import {
 import { isValidDateTime } from "./validation";
 
 export const listTimeSlots = async (req: Request, res: Response) => {
-  const teacherId = res.locals.userId
+  const teacherId = res.locals.userId;
   try {
     const timeSlots = await getTimeSlots(teacherId);
 
@@ -20,7 +20,7 @@ export const listTimeSlots = async (req: Request, res: Response) => {
     console.error(error);
 
     res.status(500).json({
-      message: 'Could not list time slots',
+      message: "Could not list time slots",
     });
   }
 };
@@ -29,7 +29,7 @@ export const getTimeSlot = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0 || id > 2147483647) {
     res.status(400).json({
-      message: 'The ID must be a positive integer',
+      message: "The ID must be a positive integer",
     });
     return;
   }
@@ -39,7 +39,7 @@ export const getTimeSlot = async (req: Request, res: Response) => {
 
     if (timeSlot === undefined) {
       res.status(404).json({
-        message: 'Time slot not found',
+        message: "Time slot not found",
       });
       return;
     }
@@ -47,57 +47,62 @@ export const getTimeSlot = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: 'Could not find this time slot',
+      message: "Could not find this time slot",
     });
   }
 };
 
 export const getTeacherTimeSlot = async (req: Request, res: Response) => {
-  const id = Number(req.params.id) 
-  const teacherId = res.locals.userId
+  const id = Number(req.params.id);
+  const teacherId = res.locals.userId;
 
-    if (!Number.isInteger(id) || id <= 0 || id > 2147483647) {
+  if (!Number.isInteger(id) || id <= 0 || id > 2147483647) {
     res.status(400).json({
-      message: 'The ID must be a positive integer',
+      message: "The ID must be a positive integer",
     });
     return;
   }
 
-  try{
-  const teacherTimeSlot = await findTeacherTimeSlot(id, teacherId)
+  try {
+    const teacherTimeSlot = await findTeacherTimeSlot(id, teacherId);
 
-  if(teacherTimeSlot === undefined) {
-    res.status(404).json({
-      message: 'Time slot not found'
-    })
-    return;
-  }
-  res.status(200).json(teacherTimeSlot)
+    if (teacherTimeSlot === undefined) {
+      res.status(404).json({
+        message: "Time slot not found",
+      });
+      return;
+    }
+    res.status(200).json(teacherTimeSlot);
   } catch (error) {
-    console.error(error)
+    console.error(error);
     res.status(500).json({
-      message: 'Could not find this time slot'
-      })
+      message: "Could not find this time slot",
+    });
   }
-}
+};
 export const createTimeSlot = async (req: Request, res: Response) => {
   const start = req.body?.start;
   const end = req.body?.end;
-  const teacherId = res.locals.userId
+  const teacherId = res.locals.userId;
 
-  if (typeof start !== "string" || typeof end !== "string" || start.trim() === "" || end.trim() === "") {
-    res.status(400).json({ message: 'Start and end are required' });
+  if (
+    typeof start !== "string" ||
+    typeof end !== "string" ||
+    start.trim() === "" ||
+    end.trim() === ""
+  ) {
+    res.status(400).json({ message: "Start and end are required" });
     return;
   }
 
   if (!isValidDateTime(start) || !isValidDateTime(end)) {
-    res.status(400).json({ message: 'Enter valid start and end dates with their times' });
+    res.status(400).json({ message: "Enter valid start and end dates with their times" });
     return;
   }
 
   if (Date.parse(end) <= Date.parse(start)) {
     res.status(400).json({
-      message: 'End must be after start',
+      message: "End must be after start",
     });
     return;
   }
@@ -107,7 +112,7 @@ export const createTimeSlot = async (req: Request, res: Response) => {
 
     if (newTime === "time-slot-conflicted") {
       res.status(409).json({
-        message: 'This time slot overlaps an existing time slot',
+        message: "This time slot overlaps an existing time slot",
       });
       return;
     }
@@ -116,7 +121,7 @@ export const createTimeSlot = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: 'Could not create time slot',
+      message: "Could not create time slot",
     });
   }
 };
@@ -128,7 +133,7 @@ export const showAvailableTimeSlots = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: 'Could not list available time slots',
+      message: "Could not list available time slots",
     });
   }
 };
@@ -141,65 +146,68 @@ export const alterTimeSlots = async (req: Request, res: Response) => {
 
   if (!Number.isInteger(id) || id <= 0 || id > 2147483647) {
     res.status(400).json({
-      message: 'The ID must be a positive integer',
+      message: "The ID must be a positive integer",
     });
     return;
   }
 
-  if (typeof start !== "string" || typeof end !== "string" || start.trim() === "" || end.trim() === "") {
+  if (
+    typeof start !== "string" ||
+    typeof end !== "string" ||
+    start.trim() === "" ||
+    end.trim() === ""
+  ) {
     res.status(400).json({
-      message: 'Start and end are required',
+      message: "Start and end are required",
     });
     return;
   }
 
   if (!isValidDateTime(start) || !isValidDateTime(end)) {
     res.status(400).json({
-      message: 'Enter valid start and end dates with their times',
+      message: "Enter valid start and end dates with their times",
     });
     return;
   }
 
   if (Date.parse(end) <= Date.parse(start)) {
     res.status(400).json({
-      message: 'End must be after start'
-    })
+      message: "End must be after start",
+    });
     return;
   }
 
   try {
     const alteredTimeSlot = await changeTimeSlot(start, end, id, teacherId);
 
-        if(alteredTimeSlot === 'has-confirmed-booking') {
+    if (alteredTimeSlot === "has-confirmed-booking") {
       res.status(409).json({
-        message: 'This time slot has a confirmed booking'
-      })
+        message: "This time slot has a confirmed booking",
+      });
       return;
     }
 
-    if(alteredTimeSlot === "time-slot-conflicted") {
+    if (alteredTimeSlot === "time-slot-conflicted") {
       res.status(409).json({
-        message: 'This time slot overlaps an existing time slot'
-      })
+        message: "This time slot overlaps an existing time slot",
+      });
       return;
     }
     if (alteredTimeSlot === undefined) {
       res.status(404).json({
-        message: 'Time slot not found',
+        message: "Time slot not found",
       });
       return;
     }
-    
 
     res.status(200).json(alteredTimeSlot);
   } catch (error) {
     console.error(error);
 
     res.status(500).json({
-      message: 'Could not update time slot',
+      message: "Could not update time slot",
     });
   }
-
 };
 
 export const removeTimeSlot = async (req: Request, res: Response) => {
@@ -208,7 +216,7 @@ export const removeTimeSlot = async (req: Request, res: Response) => {
 
   if (!Number.isInteger(id) || id <= 0 || id > 2147483647) {
     res.status(400).json({
-      message: 'The ID must be a positive integer',
+      message: "The ID must be a positive integer",
     });
     return;
   }
@@ -216,16 +224,16 @@ export const removeTimeSlot = async (req: Request, res: Response) => {
   try {
     const deletedTimeSlot = await deleteTimeSlot(id, teacherId);
 
-    if (deletedTimeSlot === 'has-bookings') {
+    if (deletedTimeSlot === "has-bookings") {
       res.status(409).json({
-        message: 'Cannot delete a time slot with bookings',
+        message: "Cannot delete a time slot with bookings",
       });
       return;
     }
 
     if (deletedTimeSlot === undefined) {
       res.status(404).json({
-        message: 'Time slot not found',
+        message: "Time slot not found",
       });
       return;
     }
@@ -235,7 +243,7 @@ export const removeTimeSlot = async (req: Request, res: Response) => {
     console.error(error);
 
     res.status(500).json({
-      message: 'Could not delete time slot',
+      message: "Could not delete time slot",
     });
   }
 };

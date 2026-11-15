@@ -18,12 +18,12 @@ timeSlotsRouter.get("/time-slots", requireUser, requireTeacher, listTimeSlots);
 
 timeSlotsRouter.get("/time-slots/available", showAvailableTimeSlots);
 
-timeSlotsRouter.get("/time-slots/teacher/:id", requireUser, requireTeacher, getTeacherTimeSlot)
+timeSlotsRouter.get("/time-slots/teacher/:id", requireUser, requireTeacher, getTeacherTimeSlot);
 
 timeSlotsRouter.get("/time-slots/:id", getTimeSlot);
 
 timeSlotsRouter.post("/time-slots", requireUser, requireTeacher, createTimeSlot);
 
-timeSlotsRouter.patch("/time-slots/:id",requireUser, requireTeacher, alterTimeSlots)
+timeSlotsRouter.patch("/time-slots/:id", requireUser, requireTeacher, alterTimeSlots);
 
 timeSlotsRouter.delete("/time-slots/:id", requireUser, requireTeacher, removeTimeSlot);

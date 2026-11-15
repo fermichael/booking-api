@@ -5,7 +5,6 @@ import session from "express-session";
 import "dotenv/config";
 import { pool } from "./database";
 import connectPgSimple from "connect-pg-simple";
-
 import { bookingRouter } from "./booking/router";
 import { timeSlotsRouter } from "./time-slots/router";
 import { usersRouter } from "./users/router";
@@ -16,7 +15,7 @@ if (!sessionSecret) {
 }
 
 export const app = express();
-const pgSession = connectPgSimple(session)
+const pgSession = connectPgSimple(session);
 
 app.use(express.json());
 
@@ -24,7 +23,7 @@ app.use(
   session({
     store: new pgSession({
       pool,
-      tableName: 'sessions'
+      tableName: "sessions",
     }),
     name: "bookingapi",
     secret: sessionSecret,
@@ -39,11 +38,11 @@ app.use(usersRouter);
 app.use(bookingRouter);
 
 app.get("/health", (req, res) => {
-  res.json({ message: 'Running' });
+  res.json({ message: "Running" });
 });
 
 app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+  res.status(404).json({ message: "Route not found" });
 });
 
 const handleError: ErrorRequestHandler = (error, req, res, next) => {
@@ -53,17 +52,17 @@ const handleError: ErrorRequestHandler = (error, req, res, next) => {
   }
 
   if (error.type === "entity.parse.failed") {
-    res.status(400).json({ message: 'Request body must contain valid JSON' });
+    res.status(400).json({ message: "Request body must contain valid JSON" });
     return;
   }
 
   if (error.type === "entity.too.large") {
-    res.status(413).json({ message: 'Request body is too large' });
+    res.status(413).json({ message: "Request body is too large" });
     return;
   }
 
   console.error(error);
-  res.status(500).json({ message: 'An unexpected error occurred' });
+  res.status(500).json({ message: "An unexpected error occurred" });
 };
 
 app.use(handleError);

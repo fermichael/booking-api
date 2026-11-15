@@ -8,7 +8,7 @@ export const createBooking = async (req: Request, res: Response<unknown, UserLoc
 
   if (!Number.isInteger(timeSlotId) || timeSlotId <= 0 || timeSlotId > 2147483647) {
     res.status(400).json({
-      message: 'Time slot ID must be a positive integer',
+      message: "Time slot ID must be a positive integer",
     });
     return;
   }
@@ -18,21 +18,21 @@ export const createBooking = async (req: Request, res: Response<unknown, UserLoc
 
     if (result === null) {
       res.status(404).json({
-        message: 'Time slot not found',
+        message: "Time slot not found",
       });
       return;
     }
 
     if (result === "already-booked") {
       res.status(409).json({
-        message: 'This time slot is already booked',
+        message: "This time slot is already booked",
       });
       return;
     }
 
     if (result === "time-slot already started") {
       res.status(409).json({
-        message: 'This time slot has already started',
+        message: "This time slot has already started",
       });
       return;
     }
@@ -41,7 +41,7 @@ export const createBooking = async (req: Request, res: Response<unknown, UserLoc
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: 'Could not create booking',
+      message: "Could not create booking",
     });
   }
 };
@@ -55,7 +55,7 @@ export const listBookings = async (req: Request, res: Response<unknown, UserLoca
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: 'Could not list bookings',
+      message: "Could not list bookings",
     });
   }
 };
@@ -69,7 +69,7 @@ export const listTeacherBookings = async (req: Request, res: Response<unknown, U
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: 'Could not list teacher bookings',
+      message: "Could not list teacher bookings",
     });
   }
 };
@@ -81,14 +81,14 @@ export const cancelBooking = async (req: Request, res: Response<unknown, UserLoc
 
   if (!Number.isInteger(bookingId) || bookingId <= 0 || bookingId > 2147483647) {
     res.status(400).json({
-      message: 'Booking ID must be a positive integer',
+      message: "Booking ID must be a positive integer",
     });
     return;
   }
 
   if (status !== "cancelled") {
     res.status(400).json({
-      message: 'Status must be cancelled',
+      message: "Status must be cancelled",
     });
     return;
   }
@@ -97,28 +97,28 @@ export const cancelBooking = async (req: Request, res: Response<unknown, UserLoc
     const result = await cancelUserBooking(bookingId, userId);
     if (result === null) {
       res.status(404).json({
-        message: 'Booking not found',
+        message: "Booking not found",
       });
       return;
     }
 
     if (result === "already cancelled") {
       res.status(200).json({
-        message: 'Booking is already cancelled',
+        message: "Booking is already cancelled",
       });
       return;
     }
 
     if (result === "timeslot not found") {
       res.status(500).json({
-      message: 'Could not cancel booking',
+        message: "Could not cancel booking",
       });
       return;
     }
 
     if (result === "class already started") {
       res.status(409).json({
-        message: 'Cannot cancel a booking after the class has started',
+        message: "Cannot cancel a booking after the class has started",
       });
       return;
     }
@@ -127,7 +127,7 @@ export const cancelBooking = async (req: Request, res: Response<unknown, UserLoc
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: 'Could not cancel booking',
+      message: "Could not cancel booking",
     });
   }
 };

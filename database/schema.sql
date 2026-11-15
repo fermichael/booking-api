@@ -4,11 +4,14 @@ BEGIN;
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'student',
     CONSTRAINT users_role_check CHECK (role IN ('student', 'teacher'))
 );
+
+CREATE UNIQUE INDEX users_email_lower_unique
+ON users (LOWER(email));
 
 CREATE TABLE time_slots (
     id SERIAL PRIMARY KEY,
