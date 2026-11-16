@@ -7,6 +7,7 @@ import {
   findUserByEmail,
   findUserById,
   normalizeEmail,
+  resetPasswordWithToken,
 } from "./service";
 import * as argon2 from "argon2";
 
@@ -212,5 +213,39 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Could not request password reset" });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const token = req.body?.token;
+  const password = req.body?.password;
+
+  if (
+    typeof token !== "string" ||
+    typeof password !== "string" ||
+    token.trim() === "" ||
+    password.trim() === ""
+  ) {
+    res.status(400).json({
+      message: "Token and password are required",
+    });
+    return;
+  }
+
+  try {
+    const passwordChanged = await resetPasswordWithToken(token, password);
+
+    if (passwordChanged === false) {
+      res.status(400).json({
+        message: "Invalid or expired token",
+      });
+      return;
+    }
+
+    res.clearCookie("bookingapi");
+    res.status(204).send();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Could not reset password" });
   }
 };

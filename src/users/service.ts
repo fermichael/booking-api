@@ -84,3 +84,45 @@ export async function createPasswordResetToken(userId: number) {
     expiresAt: result.rows[0].expires_at,
   };
 }
+
+export async function resetPasswordWithToken(token: string, password: string) {
+  const hash = createHash("sha256").update(token).digest("hex");
+  const password_hash = await argon2.hash(password);
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const claimedToken = await client.query<{ user_id: number }>(
+      `UPDATE password_reset_tokens
+      SET used_at = now()
+      WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()
+      RETURNING user_id`,
+      [hash],
+    );
+
+    if (claimedToken.rows.length === 0) {
+      await client.query("ROLLBACK");
+      return false;
+    }
+
+    const userId = claimedToken.rows[0].user_id;
+
+    await client.query("UPDATE users SET password_hash = $1 WHERE id = $2", [
+      password_hash,
+      userId,
+    ]);
+
+    await client.query("DELETE FROM sessions WHERE (sess->>'userId')::int = $1", [userId]);
+
+    await client.query("COMMIT");
+
+    return true;
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
