@@ -35,4 +35,29 @@ CREATE UNIQUE INDEX bookings_one_confirmed_per_slot
 ON bookings (time_slot_id)
 WHERE status = 'confirmed';
 
+CREATE TABLE sessions (
+    sid TEXT NOT NULL PRIMARY KEY,
+    sess JSON NOT NULL,
+    expire TIMESTAMP(6) NOT NULL
+);
+
+CREATE INDEX sessions_expire
+ON sessions (expire);
+
+CREATE TABLE password_reset_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    used_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX password_reset_tokens_user_id_idx
+ON password_reset_tokens (user_id);
+
+CREATE UNIQUE INDEX password_reset_tokens_one_active_per_user
+ON password_reset_tokens (user_id)
+WHERE used_at IS NULL;
+
 COMMIT;
