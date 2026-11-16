@@ -85,6 +85,12 @@ export async function createPasswordResetToken(userId: number) {
   };
 }
 
+export function buildPasswordResetUrl(appUrl: string, token: string) {
+  // base64url nao precisa de escape, e o fragmento nao e enviado ao servidor:
+  // assim o token nao aparece em log de acesso, historico de proxy ou Referer.
+  return `${appUrl}/reset-password#token=${token}`;
+}
+
 export async function resetPasswordWithToken(token: string, password: string) {
   const hash = createHash("sha256").update(token).digest("hex");
 

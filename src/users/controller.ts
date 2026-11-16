@@ -3,6 +3,7 @@ import type { UserLocals } from "../middleware/require-user";
 import { sendEmail } from "../email";
 import {
   addUser,
+  buildPasswordResetUrl,
   createPasswordResetToken,
   findUserByEmail,
   findUserById,
@@ -196,7 +197,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
 
     if (user !== undefined) {
       const { token } = await createPasswordResetToken(user.id);
-      const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(token)}`;
+      const resetUrl = buildPasswordResetUrl(appUrl, token);
 
       try {
         await sendEmail(
