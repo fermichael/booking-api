@@ -87,6 +87,17 @@ export async function createPasswordResetToken(userId: number) {
 
 export async function resetPasswordWithToken(token: string, password: string) {
   const hash = createHash("sha256").update(token).digest("hex");
+
+  const activeToken = await pool.query(
+    `SELECT 1 FROM password_reset_tokens
+    WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()`,
+    [hash],
+  );
+
+  if (activeToken.rows.length === 0) {
+    return false;
+  }
+
   const password_hash = await argon2.hash(password);
 
   const client = await pool.connect();
