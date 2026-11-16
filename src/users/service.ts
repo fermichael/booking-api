@@ -63,15 +63,18 @@ export async function createPasswordResetToken(userId: number) {
   const token = randomBytes(32).toString("base64url");
   const hash = createHash("sha256").update(token).digest("hex");
 
-  await pool.query(
-    `DELETE FROM password_reset_tokens
-    WHERE user_id = $1 AND used_at IS NULL`,
-    [userId],
-  );
-
   const result = await pool.query(
-    `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
-    VALUES($1, $2, now() + interval '30minutes')
+    `WITH deleted AS (
+      DELETE FROM password_reset_tokens
+      WHERE user_id = $1 AND used_at IS NOT NULL
+    )
+    INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+    VALUES ($1, $2, now() + interval '30 minutes')
+    ON CONFLICT (user_id) WHERE used_at IS NULL
+    DO UPDATE SET
+      token_hash = EXCLUDED.token_hash,
+      expires_at = EXCLUDED.expires_at,
+      created_at = now()
     RETURNING expires_at`,
     [userId, hash],
   );
