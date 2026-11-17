@@ -1,2 +1,30 @@
-.env
+# Dependencias
 node_modules/
+
+# Variaveis de ambiente e segredos
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# MCP: configuracao pessoal (DSN, senha, escolha de servidores).
+# Cada pessoa configura o seu. Nao versionar.
+opencode.json
+opencode.jsonc
+.vscode/mcp.json
+dbhub.toml
+
+# Material de estudo pessoal (workspace do skill teach).
+learning/
+
+# Logs e artefatos
+*.log
+npm-debug.log*
+coverage/
+dist/
+
+# Sistema operacional / editor
+.DS_Store
+Thumbs.db
+desktop.ini
